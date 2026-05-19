@@ -660,6 +660,173 @@ func TestValidateRPC_DetachInstance(t *testing.T) {
 	}
 }
 
+func TestValidateRPC_SetOpacity(t *testing.T) {
+	// missing nodeIds
+	if msg := ValidateRPC("set_opacity", nil, map[string]interface{}{"opacity": float64(0.5)}); msg == "" {
+		t.Error("expected error for missing nodeIds")
+	}
+	// invalid nodeId
+	if msg := ValidateRPC("set_opacity", []string{"bad"}, map[string]interface{}{"opacity": float64(0.5)}); msg == "" {
+		t.Error("expected error for invalid nodeId")
+	}
+	// missing opacity
+	if msg := ValidateRPC("set_opacity", []string{"1:1"}, nil); msg == "" {
+		t.Error("expected error for missing opacity")
+	}
+	// opacity out of range
+	if msg := ValidateRPC("set_opacity", []string{"1:1"}, map[string]interface{}{"opacity": float64(1.5)}); msg == "" {
+		t.Error("expected error for opacity > 1")
+	}
+	if msg := ValidateRPC("set_opacity", []string{"1:1"}, map[string]interface{}{"opacity": float64(-0.1)}); msg == "" {
+		t.Error("expected error for opacity < 0")
+	}
+	// boundary values
+	for _, op := range []float64{0, 0.5, 1} {
+		if msg := ValidateRPC("set_opacity", []string{"1:1"}, map[string]interface{}{"opacity": op}); msg != "" {
+			t.Errorf("unexpected error for opacity %v: %s", op, msg)
+		}
+	}
+	// multiple nodeIds
+	if msg := ValidateRPC("set_opacity", []string{"1:1", "2:2"}, map[string]interface{}{"opacity": float64(0.5)}); msg != "" {
+		t.Errorf("unexpected error for multiple valid nodeIds: %s", msg)
+	}
+}
+
+func TestValidateRPC_SetCornerRadius(t *testing.T) {
+	// missing nodeIds
+	if msg := ValidateRPC("set_corner_radius", nil, map[string]interface{}{"cornerRadius": float64(8)}); msg == "" {
+		t.Error("expected error for missing nodeIds")
+	}
+	// invalid nodeId
+	if msg := ValidateRPC("set_corner_radius", []string{"bad"}, map[string]interface{}{"cornerRadius": float64(8)}); msg == "" {
+		t.Error("expected error for invalid nodeId")
+	}
+	// no radius param provided
+	if msg := ValidateRPC("set_corner_radius", []string{"1:1"}, nil); msg == "" {
+		t.Error("expected error when no radius param provided")
+	}
+	// uniform cornerRadius
+	if msg := ValidateRPC("set_corner_radius", []string{"1:1"}, map[string]interface{}{"cornerRadius": float64(8)}); msg != "" {
+		t.Errorf("unexpected error for cornerRadius: %s", msg)
+	}
+	// per-corner individually
+	for _, param := range []string{"topLeftRadius", "topRightRadius", "bottomLeftRadius", "bottomRightRadius"} {
+		if msg := ValidateRPC("set_corner_radius", []string{"1:1"}, map[string]interface{}{param: float64(4)}); msg != "" {
+			t.Errorf("unexpected error for %s: %s", param, msg)
+		}
+	}
+	// mixed per-corner
+	if msg := ValidateRPC("set_corner_radius", []string{"1:1"}, map[string]interface{}{
+		"topLeftRadius": float64(8), "topRightRadius": float64(0),
+		"bottomLeftRadius": float64(8), "bottomRightRadius": float64(0),
+	}); msg != "" {
+		t.Errorf("unexpected error for per-corner radii: %s", msg)
+	}
+}
+
+func TestValidateRPC_GroupNodes(t *testing.T) {
+	// fewer than 2 nodes
+	if msg := ValidateRPC("group_nodes", nil, nil); msg == "" {
+		t.Error("expected error for empty nodeIds")
+	}
+	if msg := ValidateRPC("group_nodes", []string{"1:1"}, nil); msg == "" {
+		t.Error("expected error for single nodeId")
+	}
+	// invalid nodeId
+	if msg := ValidateRPC("group_nodes", []string{"1:1", "bad"}, nil); msg == "" {
+		t.Error("expected error for invalid nodeId")
+	}
+	// valid
+	if msg := ValidateRPC("group_nodes", []string{"1:1", "2:2"}, nil); msg != "" {
+		t.Errorf("unexpected error: %s", msg)
+	}
+	if msg := ValidateRPC("group_nodes", []string{"1:1", "2:2", "3:3"}, nil); msg != "" {
+		t.Errorf("unexpected error for 3 nodeIds: %s", msg)
+	}
+}
+
+func TestValidateRPC_UngroupNodes(t *testing.T) {
+	// missing nodeIds
+	if msg := ValidateRPC("ungroup_nodes", nil, nil); msg == "" {
+		t.Error("expected error for empty nodeIds")
+	}
+	// invalid nodeId
+	if msg := ValidateRPC("ungroup_nodes", []string{"bad-id"}, nil); msg == "" {
+		t.Error("expected error for invalid nodeId")
+	}
+	// valid single
+	if msg := ValidateRPC("ungroup_nodes", []string{"1:1"}, nil); msg != "" {
+		t.Errorf("unexpected error: %s", msg)
+	}
+	// valid multiple
+	if msg := ValidateRPC("ungroup_nodes", []string{"1:1", "2:2"}, nil); msg != "" {
+		t.Errorf("unexpected error for multiple nodeIds: %s", msg)
+	}
+}
+
+func TestValidateRPC_NavigateToPage(t *testing.T) {
+	// neither pageId nor pageName
+	if msg := ValidateRPC("navigate_to_page", nil, nil); msg == "" {
+		t.Error("expected error when neither pageId nor pageName provided")
+	}
+	if msg := ValidateRPC("navigate_to_page", nil, map[string]interface{}{}); msg == "" {
+		t.Error("expected error for empty params")
+	}
+	// pageId provided
+	if msg := ValidateRPC("navigate_to_page", nil, map[string]interface{}{"pageId": "0:1"}); msg != "" {
+		t.Errorf("unexpected error for pageId: %s", msg)
+	}
+	// pageName provided
+	if msg := ValidateRPC("navigate_to_page", nil, map[string]interface{}{"pageName": "Design"}); msg != "" {
+		t.Errorf("unexpected error for pageName: %s", msg)
+	}
+	// both provided — also valid
+	if msg := ValidateRPC("navigate_to_page", nil, map[string]interface{}{"pageId": "0:1", "pageName": "Design"}); msg != "" {
+		t.Errorf("unexpected error when both provided: %s", msg)
+	}
+}
+
+func TestValidateRPC_CreateComponent(t *testing.T) {
+	// missing nodeId
+	if msg := ValidateRPC("create_component", nil, nil); msg == "" {
+		t.Error("expected error for missing nodeId")
+	}
+	if msg := ValidateRPC("create_component", []string{""}, nil); msg == "" {
+		t.Error("expected error for empty nodeId")
+	}
+	// invalid nodeId format
+	if msg := ValidateRPC("create_component", []string{"bad-id"}, nil); msg == "" {
+		t.Error("expected error for hyphen nodeId")
+	}
+	// valid
+	if msg := ValidateRPC("create_component", []string{"1:1"}, nil); msg != "" {
+		t.Errorf("unexpected error: %s", msg)
+	}
+	if msg := ValidateRPC("create_component", []string{"1:1"}, map[string]interface{}{"name": "MyComponent"}); msg != "" {
+		t.Errorf("unexpected error with name: %s", msg)
+	}
+}
+
+func TestValidateRPC_ExportTokens(t *testing.T) {
+	// no params — valid (defaults to json)
+	if msg := ValidateRPC("export_tokens", nil, nil); msg != "" {
+		t.Errorf("unexpected error for no params: %s", msg)
+	}
+	// valid formats
+	for _, f := range []string{"json", "css"} {
+		if msg := ValidateRPC("export_tokens", nil, map[string]interface{}{"format": f}); msg != "" {
+			t.Errorf("unexpected error for format %s: %s", f, msg)
+		}
+	}
+	// invalid format
+	if msg := ValidateRPC("export_tokens", nil, map[string]interface{}{"format": "yaml"}); msg == "" {
+		t.Error("expected error for invalid format")
+	}
+	if msg := ValidateRPC("export_tokens", nil, map[string]interface{}{"format": "style-dictionary"}); msg == "" {
+		t.Error("expected error for unsupported format")
+	}
+}
+
 func TestValidateAutoLayoutParams_InvalidValues(t *testing.T) {
 	cases := []struct {
 		param string
@@ -688,5 +855,163 @@ func TestValidateAutoLayoutParams_InvalidValues(t *testing.T) {
 	})
 	if msg != "" {
 		t.Errorf("unexpected error for valid auto-layout params: %s", msg)
+	}
+}
+
+// ── set_reactions ─────────────────────────────────────────────────────────────
+
+func TestValidateRPC_SetReactions(t *testing.T) {
+	validReaction := map[string]interface{}{
+		"trigger": map[string]interface{}{"type": "ON_CLICK"},
+		"action": map[string]interface{}{
+			"type":          "NODE",
+			"destinationId": "1:3",
+			"navigation":    "NAVIGATE",
+		},
+	}
+
+	// missing nodeId
+	if msg := ValidateRPC("set_reactions", nil, map[string]interface{}{"reactions": []interface{}{}}); msg == "" {
+		t.Error("expected error for missing nodeId")
+	}
+	// bad nodeId format
+	if msg := ValidateRPC("set_reactions", []string{"1-2"}, map[string]interface{}{"reactions": []interface{}{}}); msg == "" {
+		t.Error("expected error for bad nodeId format")
+	}
+	// missing reactions
+	if msg := ValidateRPC("set_reactions", []string{"1:2"}, map[string]interface{}{}); msg == "" {
+		t.Error("expected error for missing reactions")
+	}
+	// reactions not an array
+	if msg := ValidateRPC("set_reactions", []string{"1:2"}, map[string]interface{}{"reactions": "not-array"}); msg == "" {
+		t.Error("expected error for non-array reactions")
+	}
+	// bad mode
+	if msg := ValidateRPC("set_reactions", []string{"1:2"}, map[string]interface{}{
+		"reactions": []interface{}{},
+		"mode":      "overwrite",
+	}); msg == "" {
+		t.Error("expected error for bad mode")
+	}
+	// valid mode replace
+	if msg := ValidateRPC("set_reactions", []string{"1:2"}, map[string]interface{}{
+		"reactions": []interface{}{validReaction},
+		"mode":      "replace",
+	}); msg != "" {
+		t.Errorf("unexpected error for mode=replace: %s", msg)
+	}
+	// valid mode append
+	if msg := ValidateRPC("set_reactions", []string{"1:2"}, map[string]interface{}{
+		"reactions": []interface{}{validReaction},
+		"mode":      "append",
+	}); msg != "" {
+		t.Errorf("unexpected error for mode=append: %s", msg)
+	}
+	// invalid trigger type
+	if msg := ValidateRPC("set_reactions", []string{"1:2"}, map[string]interface{}{
+		"reactions": []interface{}{
+			map[string]interface{}{
+				"trigger": map[string]interface{}{"type": "INVALID_TRIGGER"},
+				"action":  map[string]interface{}{"type": "BACK"},
+			},
+		},
+	}); msg == "" {
+		t.Error("expected error for invalid trigger type")
+	}
+	// AFTER_TIMEOUT missing timeout
+	if msg := ValidateRPC("set_reactions", []string{"1:2"}, map[string]interface{}{
+		"reactions": []interface{}{
+			map[string]interface{}{
+				"trigger": map[string]interface{}{"type": "AFTER_TIMEOUT"},
+				"action":  map[string]interface{}{"type": "BACK"},
+			},
+		},
+	}); msg == "" {
+		t.Error("expected error for AFTER_TIMEOUT without timeout")
+	}
+	// AFTER_TIMEOUT with valid timeout
+	if msg := ValidateRPC("set_reactions", []string{"1:2"}, map[string]interface{}{
+		"reactions": []interface{}{
+			map[string]interface{}{
+				"trigger": map[string]interface{}{"type": "AFTER_TIMEOUT", "timeout": float64(3000)},
+				"action":  map[string]interface{}{"type": "BACK"},
+			},
+		},
+	}); msg != "" {
+		t.Errorf("unexpected error for valid AFTER_TIMEOUT: %s", msg)
+	}
+	// invalid action type
+	if msg := ValidateRPC("set_reactions", []string{"1:2"}, map[string]interface{}{
+		"reactions": []interface{}{
+			map[string]interface{}{
+				"trigger": map[string]interface{}{"type": "ON_CLICK"},
+				"action":  map[string]interface{}{"type": "INVALID_ACTION"},
+			},
+		},
+	}); msg == "" {
+		t.Error("expected error for invalid action type")
+	}
+	// NODE missing navigation field
+	if msg := ValidateRPC("set_reactions", []string{"1:2"}, map[string]interface{}{
+		"reactions": []interface{}{
+			map[string]interface{}{
+				"trigger": map[string]interface{}{"type": "ON_CLICK"},
+				"action":  map[string]interface{}{"type": "NODE", "destinationId": "1:3"},
+			},
+		},
+	}); msg == "" {
+		t.Error("expected error for NODE without navigation")
+	}
+	// URL missing url
+	if msg := ValidateRPC("set_reactions", []string{"1:2"}, map[string]interface{}{
+		"reactions": []interface{}{
+			map[string]interface{}{
+				"trigger": map[string]interface{}{"type": "ON_CLICK"},
+				"action":  map[string]interface{}{"type": "URL"},
+			},
+		},
+	}); msg == "" {
+		t.Error("expected error for URL without url")
+	}
+	// empty reactions array is valid (clear all)
+	if msg := ValidateRPC("set_reactions", []string{"1:2"}, map[string]interface{}{
+		"reactions": []interface{}{},
+	}); msg != "" {
+		t.Errorf("unexpected error for empty reactions: %s", msg)
+	}
+	// valid full reaction
+	if msg := ValidateRPC("set_reactions", []string{"1:2"}, map[string]interface{}{
+		"reactions": []interface{}{validReaction},
+	}); msg != "" {
+		t.Errorf("unexpected error for valid reaction: %s", msg)
+	}
+}
+
+// ── remove_reactions ──────────────────────────────────────────────────────────
+
+func TestValidateRPC_RemoveReactions(t *testing.T) {
+	// missing nodeId
+	if msg := ValidateRPC("remove_reactions", nil, map[string]interface{}{}); msg == "" {
+		t.Error("expected error for missing nodeId")
+	}
+	// bad nodeId format
+	if msg := ValidateRPC("remove_reactions", []string{"1-2"}, map[string]interface{}{}); msg == "" {
+		t.Error("expected error for bad nodeId format")
+	}
+	// non-number in indices
+	if msg := ValidateRPC("remove_reactions", []string{"1:2"}, map[string]interface{}{
+		"indices": []interface{}{"zero"},
+	}); msg == "" {
+		t.Error("expected error for non-number index")
+	}
+	// valid with no indices (remove all)
+	if msg := ValidateRPC("remove_reactions", []string{"1:2"}, map[string]interface{}{}); msg != "" {
+		t.Errorf("unexpected error for remove all: %s", msg)
+	}
+	// valid with numeric indices
+	if msg := ValidateRPC("remove_reactions", []string{"1:2"}, map[string]interface{}{
+		"indices": []interface{}{float64(0), float64(2)},
+	}); msg != "" {
+		t.Errorf("unexpected error for valid indices: %s", msg)
 	}
 }

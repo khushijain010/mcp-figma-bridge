@@ -7,9 +7,9 @@ Open-source Figma MCP server with full read/write access via plugin — no REST 
 **Highlights**
 - No Figma API token required
 - No rate limits — free plan friendly
-- **Read and Write** live Figma data via plugin bridge
-- Supports multiple AI tools simultaneously
-- Written in Go, distributed via npm
+- **Read and Write** live Figma data via plugin bridge — 58 tools total
+- Full design automation — styles, variables, components, prototypes, and content
+- Design strategies included — read_design_strategy, design_strategy, and more prompts built in
 
 https://github.com/user-attachments/assets/17bda971-0e83-4f18-8758-8ac2b8dcba62
 
@@ -94,6 +94,7 @@ claude mcp add -s project figma-mcp-go -- npx -y @vkhanhqui/figma-mcp-go@latest
 | `create_ellipse` | Create an ellipse or circle |
 | `create_text` | Create a text node (font loaded automatically) |
 | `import_image` | Decode base64 image and place it as a rectangle fill |
+| `create_component` | Convert an existing FRAME node into a reusable component |
 
 ### Write — Modify
 
@@ -102,6 +103,9 @@ claude mcp add -s project figma-mcp-go -- npx -y @vkhanhqui/figma-mcp-go@latest
 | `set_text` | Update text content of an existing TEXT node |
 | `set_fills` | Set solid fill color (hex) on a node |
 | `set_strokes` | Set solid stroke color and weight on a node |
+| `set_opacity` | Set opacity of one or more nodes (0 = transparent, 1 = opaque) |
+| `set_corner_radius` | Set corner radius — uniform or per-corner |
+| `set_auto_layout` | Set or update auto-layout (flex) properties on a frame |
 | `move_nodes` | Move nodes to an absolute x/y position |
 | `resize_nodes` | Resize nodes by width and/or height |
 | `rename_node` | Rename a node |
@@ -113,7 +117,47 @@ claude mcp add -s project figma-mcp-go -- npx -y @vkhanhqui/figma-mcp-go@latest
 |------|-------------|
 | `delete_nodes` | Delete one or more nodes permanently |
 
-### Document & Selection
+### Write — Prototype
+
+| Tool | Description |
+|------|-------------|
+| `set_reactions` | Set prototype reactions (triggers + actions) on a node; mode `replace` or `append` |
+| `remove_reactions` | Remove all or specific reactions by zero-based index from a node |
+
+### Write — Styles
+
+| Tool | Description |
+|------|-------------|
+| `create_paint_style` | Create a named paint style with a solid color |
+| `create_text_style` | Create a named text style with font, size, and spacing |
+| `create_effect_style` | Create a named effect style (drop shadow, inner shadow, blur) |
+| `create_grid_style` | Create a named layout grid style (columns, rows, or grid) |
+| `update_paint_style` | Rename or recolor an existing paint style |
+| `apply_style_to_node` | Apply an existing local style to a node, linking it to that style |
+| `delete_style` | Delete any style (paint, text, effect, or grid) by ID |
+
+### Write — Variables
+
+| Tool | Description |
+|------|-------------|
+| `create_variable_collection` | Create a new local variable collection with an optional initial mode |
+| `add_variable_mode` | Add a new mode to an existing collection (e.g. Light/Dark) |
+| `create_variable` | Create a variable (COLOR/FLOAT/STRING/BOOLEAN) in a collection |
+| `set_variable_value` | Set a variable's value for a specific mode |
+| `bind_variable_to_node` | Bind a local variable to a node property |
+| `delete_variable` | Delete a variable or an entire collection |
+
+### Write — Components & Navigation
+
+| Tool | Description |
+|------|-------------|
+| `navigate_to_page` | Switch the active Figma page by ID or name |
+| `group_nodes` | Group two or more nodes into a GROUP |
+| `ungroup_nodes` | Ungroup GROUP nodes, moving children to the parent |
+| `swap_component` | Swap the main component of an INSTANCE node |
+| `detach_instance` | Detach component instances, converting them to plain frames |
+
+### Read — Document & Selection
 
 | Tool | Description |
 |------|-------------|
@@ -129,7 +173,7 @@ claude mcp add -s project figma-mcp-go -- npx -y @vkhanhqui/figma-mcp-go@latest
 | `scan_nodes_by_types` | Nodes matching given type list |
 | `get_viewport` | Current viewport center, zoom, and visible bounds |
 
-### Styles & Variables
+### Read — Styles & Variables
 
 | Tool | Description |
 |------|-------------|
@@ -146,6 +190,8 @@ claude mcp add -s project figma-mcp-go -- npx -y @vkhanhqui/figma-mcp-go@latest
 |------|-------------|
 | `get_screenshot` | Base64 image export of any node |
 | `save_screenshots` | Export images to disk (server-side, no API call) |
+| `export_frames_to_pdf` | Export multiple frames as a single multi-page PDF file saved to disk |
+| `export_tokens` | Export design tokens (variables + paint styles) as JSON or CSS |
 
 ### MCP Prompts
 
@@ -171,3 +217,13 @@ claude mcp add -s project figma-mcp-go -- npx -y @vkhanhqui/figma-mcp-go@latest
 ## Contributing
 
 Issues and PRs are welcome.
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=vkhanhqui%2Ffigma-mcp-go&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=vkhanhqui/figma-mcp-go&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=vkhanhqui/figma-mcp-go&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=vkhanhqui/figma-mcp-go&type=date&legend=top-left" />
+ </picture>
+</a>
