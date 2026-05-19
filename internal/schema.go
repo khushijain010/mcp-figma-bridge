@@ -77,6 +77,35 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 				return "depth must be a non-negative number"
 			}
 		}
+		if detail, ok := params["detail"].(string); ok && detail != "" {
+			switch detail {
+			case "minimal", "compact", "full":
+			default:
+				return fmt.Sprintf("detail must be minimal, compact, or full, got: %s", detail)
+			}
+		}
+
+	case "search_nodes":
+		query, _ := params["query"].(string)
+		if query == "" {
+			return "query is required"
+		}
+		if nodeID, ok := params["nodeId"].(string); ok && nodeID != "" {
+			if !ValidNodeID(nodeID) {
+				return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeID)
+			}
+		}
+		if limit, ok := params["limit"].(float64); ok && limit <= 0 {
+			return "limit must be a positive number"
+		}
+
+	case "get_reactions":
+		if len(nodeIDs) == 0 || nodeIDs[0] == "" {
+			return "nodeId is required"
+		}
+		if !ValidNodeID(nodeIDs[0]) {
+			return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeIDs[0])
+		}
 
 	case "scan_text_nodes", "scan_nodes_by_types":
 		nodeID, _ := params["nodeId"].(string)
@@ -91,6 +120,155 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 			if !ok || len(types) == 0 {
 				return "types must be a non-empty array"
 			}
+		}
+
+	// ── Write tools ──────────────────────────────────────────────────────────
+
+	case "create_frame":
+		if w, ok := params["width"].(float64); ok && w <= 0 {
+			return "width must be positive"
+		}
+		if h, ok := params["height"].(float64); ok && h <= 0 {
+			return "height must be positive"
+		}
+		if lm, ok := params["layoutMode"].(string); ok && lm != "" {
+			switch lm {
+			case "HORIZONTAL", "VERTICAL", "NONE":
+			default:
+				return fmt.Sprintf("layoutMode must be HORIZONTAL, VERTICAL, or NONE, got: %s", lm)
+			}
+		}
+		if pid, ok := params["parentId"].(string); ok && pid != "" && !ValidNodeID(pid) {
+			return fmt.Sprintf("parentId must use colon format e.g. 4029:12345, got: %s", pid)
+		}
+
+	case "create_rectangle", "create_ellipse":
+		if w, ok := params["width"].(float64); ok && w <= 0 {
+			return "width must be positive"
+		}
+		if h, ok := params["height"].(float64); ok && h <= 0 {
+			return "height must be positive"
+		}
+		if pid, ok := params["parentId"].(string); ok && pid != "" && !ValidNodeID(pid) {
+			return fmt.Sprintf("parentId must use colon format e.g. 4029:12345, got: %s", pid)
+		}
+
+	case "create_text":
+		if text, _ := params["text"].(string); text == "" {
+			return "text is required"
+		}
+		if pid, ok := params["parentId"].(string); ok && pid != "" && !ValidNodeID(pid) {
+			return fmt.Sprintf("parentId must use colon format e.g. 4029:12345, got: %s", pid)
+		}
+
+	case "set_text":
+		if len(nodeIDs) == 0 || nodeIDs[0] == "" {
+			return "nodeId is required"
+		}
+		if !ValidNodeID(nodeIDs[0]) {
+			return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeIDs[0])
+		}
+		if _, ok := params["text"].(string); !ok {
+			return "text is required"
+		}
+
+	case "set_fills":
+		if len(nodeIDs) == 0 || nodeIDs[0] == "" {
+			return "nodeId is required"
+		}
+		if !ValidNodeID(nodeIDs[0]) {
+			return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeIDs[0])
+		}
+		if color, _ := params["color"].(string); color == "" {
+			return "color is required (hex string e.g. #FF5733)"
+		}
+
+	case "set_strokes":
+		if len(nodeIDs) == 0 || nodeIDs[0] == "" {
+			return "nodeId is required"
+		}
+		if !ValidNodeID(nodeIDs[0]) {
+			return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeIDs[0])
+		}
+		if color, _ := params["color"].(string); color == "" {
+			return "color is required (hex string e.g. #FF5733)"
+		}
+
+	case "move_nodes":
+		if len(nodeIDs) == 0 {
+			return "nodeIds is required"
+		}
+		for _, id := range nodeIDs {
+			if !ValidNodeID(id) {
+				return fmt.Sprintf("invalid nodeId: %s — must use colon format e.g. 4029:12345", id)
+			}
+		}
+		_, hasX := params["x"]
+		_, hasY := params["y"]
+		if !hasX && !hasY {
+			return "at least one of x or y is required"
+		}
+
+	case "resize_nodes":
+		if len(nodeIDs) == 0 {
+			return "nodeIds is required"
+		}
+		for _, id := range nodeIDs {
+			if !ValidNodeID(id) {
+				return fmt.Sprintf("invalid nodeId: %s — must use colon format e.g. 4029:12345", id)
+			}
+		}
+		_, hasW := params["width"]
+		_, hasH := params["height"]
+		if !hasW && !hasH {
+			return "at least one of width or height is required"
+		}
+
+	case "delete_nodes":
+		if len(nodeIDs) == 0 {
+			return "nodeIds is required and must not be empty"
+		}
+		for _, id := range nodeIDs {
+			if !ValidNodeID(id) {
+				return fmt.Sprintf("invalid nodeId: %s — must use colon format e.g. 4029:12345", id)
+			}
+		}
+
+	case "rename_node":
+		if len(nodeIDs) == 0 || nodeIDs[0] == "" {
+			return "nodeId is required"
+		}
+		if !ValidNodeID(nodeIDs[0]) {
+			return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeIDs[0])
+		}
+		if name, _ := params["name"].(string); name == "" {
+			return "name is required"
+		}
+
+	case "clone_node":
+		if len(nodeIDs) == 0 || nodeIDs[0] == "" {
+			return "nodeId is required"
+		}
+		if !ValidNodeID(nodeIDs[0]) {
+			return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeIDs[0])
+		}
+		if pid, ok := params["parentId"].(string); ok && pid != "" && !ValidNodeID(pid) {
+			return fmt.Sprintf("parentId must use colon format e.g. 4029:12345, got: %s", pid)
+		}
+
+	case "import_image":
+		if imageData, _ := params["imageData"].(string); imageData == "" {
+			return "imageData (base64) is required"
+		}
+		if sm, ok := params["scaleMode"].(string); ok && sm != "" {
+			switch sm {
+			case "FILL", "FIT", "CROP", "TILE":
+			default:
+				return fmt.Sprintf("scaleMode must be FILL, FIT, CROP, or TILE, got: %s", sm)
+			}
+		}
+		if pid, ok := params["parentId"].(string); ok && pid != "" && !ValidNodeID(pid) {
+			return fmt.Sprintf("parentId must use colon format e.g. 4029:12345, got: %s", pid)
 		}
 	}
 
