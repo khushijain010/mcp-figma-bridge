@@ -59,6 +59,11 @@ Install via `npx` — no build step required. Watch the setup video or follow th
 claude mcp add -s project figma-mcp-go -- npx -y @vkhanhqui/figma-mcp-go@latest
 ```
 
+**Codex CLI**
+```bash
+codex mcp add figma-mcp-go -- npx -y @vkhanhqui/figma-mcp-go@latest
+```
+
 **.mcp.json** (Claude and other MCP-compatible tools)
 ```json
 {
@@ -235,6 +240,14 @@ claude mcp add -s project figma-mcp-go -- npx -y @vkhanhqui/figma-mcp-go@latest
 | `annotation_conversion_strategy` | Convert manual annotations to native Figma annotations |
 | `swap_overrides_instances` | Transfer overrides between component instances |
 | `reaction_to_connector_strategy` | Map prototype reactions into interaction flow diagrams |
+
+---
+
+## Related Projects
+
+- [magic-spells/figma-mcp-bridge](https://github.com/magic-spells/figma-mcp-bridge)
+- [grab/cursor-talk-to-figma-mcp](https://github.com/grab/cursor-talk-to-figma-mcp)
+- [gethopp/figma-mcp-bridge](https://github.com/gethopp/figma-mcp-bridge)
 
 ---
 
