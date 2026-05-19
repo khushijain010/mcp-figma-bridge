@@ -1,12 +1,4 @@
-# figma-mcp-go
-
-Figma MCP — Free, No Rate Limits [![vkhanhqui/figma-mcp-go server](https://glama.ai/mcp/servers/vkhanhqui/figma-mcp-go/badges/score.svg)](https://glama.ai/mcp/servers/vkhanhqui/figma-mcp-go)
-<p>
-  <a href="https://www.npmjs.com/package/@vkhanhqui/figma-mcp-go"><img src="https://img.shields.io/npm/v/@vkhanhqui/figma-mcp-go?color=blue" alt="npm version" /></a>
-  <a href="https://registry.modelcontextprotocol.io/?q=figma-mcp-go"><img src="https://img.shields.io/badge/MCP-Registry-purple" alt="MCP Registry" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
-  <a href="https://github.com/vkhanhqui/figma-mcp-go/stargazers"><img src="https://img.shields.io/github/stars/vkhanhqui/figma-mcp-go?style=social" alt="GitHub stars" /></a>
-</p>
+# mcp-figma-bridge
 
 Open-source Figma MCP server with full read/write access via plugin — no REST API, no rate limits. Turn text into designs and designs into real code. Works with Cursor, Claude, GitHub Copilot, and any MCP-compatible AI tool.
 
@@ -16,16 +8,6 @@ Open-source Figma MCP server with full read/write access via plugin — no REST 
 - **Read and Write** live Figma data via plugin bridge — 73 tools total
 - Full design automation — styles, variables, components, prototypes, and content
 - Design strategies included — read_design_strategy, design_strategy, and more prompts built in
-
-**Styles, Variables, Components, Prototypes, and Content**
-
-https://github.com/user-attachments/assets/eae41471-fc72-4574-8261-4f42c38b8c99
-
-**Text to Design, Design to Code**
-
-https://github.com/user-attachments/assets/17bda971-0e83-4f18-8758-8ac2b8dcba62
-
----
 
 ## Why this exists
 
@@ -48,9 +30,7 @@ So I built something that **doesn't use the API at all**.
 
 ## Installation & Setup
 
-Install via `npx` — no build step required. Watch the setup video or follow the steps below.
-
-[![Watch the video](https://img.youtube.com/vi/DjqyU0GKv9k/sddefault.jpg)](https://youtu.be/DjqyU0GKv9k)
+Install via `npx` — no build step required. Follow the steps below.
 
 ### 1. Configure your AI tool
 
