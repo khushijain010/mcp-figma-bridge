@@ -28,14 +28,34 @@ export const getParentNode = async (parentId: string | undefined) => {
   return parent as ChildrenMixin & BaseNode;
 };
 
+export const applyAutoLayout = (frame: FrameNode, p: any) => {
+  if (p.layoutMode != null) frame.layoutMode = p.layoutMode;
+  if (p.paddingTop != null) frame.paddingTop = Number(p.paddingTop);
+  if (p.paddingRight != null) frame.paddingRight = Number(p.paddingRight);
+  if (p.paddingBottom != null) frame.paddingBottom = Number(p.paddingBottom);
+  if (p.paddingLeft != null) frame.paddingLeft = Number(p.paddingLeft);
+  if (p.itemSpacing != null) frame.itemSpacing = Number(p.itemSpacing);
+  if (frame.layoutMode !== "NONE") {
+    if (p.primaryAxisAlignItems) frame.primaryAxisAlignItems = p.primaryAxisAlignItems;
+    if (p.counterAxisAlignItems) frame.counterAxisAlignItems = p.counterAxisAlignItems;
+    if (p.primaryAxisSizingMode) frame.primaryAxisSizingMode = p.primaryAxisSizingMode;
+    if (p.counterAxisSizingMode) frame.counterAxisSizingMode = p.counterAxisSizingMode;
+    if (p.layoutWrap) frame.layoutWrap = p.layoutWrap;
+    if (p.counterAxisSpacing != null && frame.layoutWrap === "WRAP") {
+      frame.counterAxisSpacing = Number(p.counterAxisSpacing);
+    }
+  }
+};
+
 export const base64ToBytes = (b64: string) => {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   const lookup: Record<string, number> = {};
   for (let i = 0; i < chars.length; i++) lookup[chars[i]] = i;
-  const clean = b64.replace(/[^A-Za-z0-9+/]/g, "");
-  let outLen = Math.floor(clean.length * 3 / 4);
-  if (b64.endsWith("==")) outLen -= 2;
-  else if (b64.endsWith("=")) outLen -= 1;
+  const padded = b64.replace(/[^A-Za-z0-9+/=]/g, "");
+  const clean = padded.replace(/=/g, "");
+  let outLen = Math.floor(padded.length * 3 / 4);
+  if (padded.endsWith("==")) outLen -= 2;
+  else if (padded.endsWith("=")) outLen -= 1;
   const bytes = new Uint8Array(outLen);
   let j = 0;
   for (let i = 0; i < clean.length; i += 4) {

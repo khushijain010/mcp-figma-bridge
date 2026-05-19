@@ -204,6 +204,9 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 		if color, _ := params["color"].(string); color == "" {
 			return "color is required (hex string e.g. #FF5733)"
 		}
+		if mode, ok := params["mode"].(string); ok && mode != "replace" && mode != "append" {
+			return "mode must be 'replace' or 'append'"
+		}
 
 	case "set_strokes":
 		if len(nodeIDs) == 0 || nodeIDs[0] == "" {
@@ -214,6 +217,9 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 		}
 		if color, _ := params["color"].(string); color == "" {
 			return "color is required (hex string e.g. #FF5733)"
+		}
+		if mode, ok := params["mode"].(string); ok && mode != "replace" && mode != "append" {
+			return "mode must be 'replace' or 'append'"
 		}
 
 	case "move_nodes":
@@ -421,6 +427,64 @@ func ValidateRPC(tool string, nodeIDs []string, params map[string]interface{}) s
 		cid, _ := params["collectionId"].(string)
 		if vid == "" && cid == "" {
 			return "variableId or collectionId is required"
+		}
+
+	// ── Linked tools ─────────────────────────────────────────────────────────
+
+	case "apply_style_to_node":
+		if len(nodeIDs) == 0 || nodeIDs[0] == "" {
+			return "nodeId is required"
+		}
+		if !ValidNodeID(nodeIDs[0]) {
+			return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeIDs[0])
+		}
+		if styleId, _ := params["styleId"].(string); styleId == "" {
+			return "styleId is required"
+		}
+		if target, ok := params["target"].(string); ok && target != "" {
+			switch target {
+			case "fill", "stroke":
+			default:
+				return fmt.Sprintf("target must be fill or stroke, got: %s", target)
+			}
+		}
+
+	case "bind_variable_to_node":
+		if len(nodeIDs) == 0 || nodeIDs[0] == "" {
+			return "nodeId is required"
+		}
+		if !ValidNodeID(nodeIDs[0]) {
+			return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeIDs[0])
+		}
+		if variableId, _ := params["variableId"].(string); variableId == "" {
+			return "variableId is required"
+		}
+		if field, _ := params["field"].(string); field == "" {
+			return "field is required"
+		}
+
+	case "swap_component":
+		if len(nodeIDs) == 0 || nodeIDs[0] == "" {
+			return "nodeId is required"
+		}
+		if !ValidNodeID(nodeIDs[0]) {
+			return fmt.Sprintf("nodeId must use colon format e.g. 4029:12345, got: %s", nodeIDs[0])
+		}
+		if componentId, _ := params["componentId"].(string); componentId == "" {
+			return "componentId is required"
+		}
+		if cid, _ := params["componentId"].(string); cid != "" && !ValidNodeID(cid) {
+			return fmt.Sprintf("componentId must use colon format e.g. 4029:12345, got: %s", cid)
+		}
+
+	case "detach_instance":
+		if len(nodeIDs) == 0 {
+			return "nodeIds is required and must not be empty"
+		}
+		for _, id := range nodeIDs {
+			if !ValidNodeID(id) {
+				return fmt.Sprintf("invalid nodeId: %s — must use colon format e.g. 4029:12345", id)
+			}
 		}
 	}
 
