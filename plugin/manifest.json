@@ -3,7 +3,7 @@
   "id": "figma-mcp-go",
   "api": "1.0.0",
   "main": "code.js",
-  "ui": "ui.html",
+  "ui": "index.html",
   "permissions": [],
   "networkAccess": {
     "allowedDomains": ["ws://localhost:1994", "https://avatars.githubusercontent.com"],
